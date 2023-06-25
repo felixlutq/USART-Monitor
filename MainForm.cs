@@ -15,25 +15,35 @@ namespace USART_Monitor
     {
         private Cache cache;
         private delegate void SafeCallDelegate(string text);
+        
 
         public MainForm()
         {
             InitializeComponent();
-            //this.toolStripButtonConnect.Enabled = false;
-            //this.toolStripButtonDisconnect.Enabled = false;
+            this.toolStripButtonConnect.Enabled = false;
+            this.toolStripButtonDisconnect.Enabled = false;
             cache = new Cache();
             Thread thread = new Thread(new ThreadStart(this.portScan));
             thread.IsBackground = true;
-            thread.Start();
-            
-            
+            thread.Start();  
+        }
+
+        public void EnableConnectButton(bool enable)
+        {
+            toolStripButtonConnect.Enabled = enable;
+        }
+
+        public void EnableDisconnectButton(bool enable)
+        {
+            toolStripButtonDisconnect.Enabled = enable;
         }
 
         private void portScan()
         {
             while (true)
             {
-                cache.availableSerialPortNames = System.IO.Ports.SerialPort.GetPortNames();
+                cache.availableSerialPortNames.Clear();
+                cache.availableSerialPortNames.AddRange(System.IO.Ports.SerialPort.GetPortNames());
                 Thread.Sleep(1200);
             }
         }
@@ -45,11 +55,10 @@ namespace USART_Monitor
 
         private void toolStripButtonPorts_Click(object sender, EventArgs e)
         {
-            PortsForm portsForm = new PortsForm(this.cache);
+            MainForm mainForm = this;
+            PortsForm portsForm = new PortsForm(ref this.cache, ref mainForm);
             portsForm.Show();
-            portsForm.SetDesktopLocation(this.Location.X, this.Location.Y);
-            
-            
+            portsForm.SetDesktopLocation(this.Location.X, this.Location.Y); 
         }
 
         private void serialPort1_pinChanged(object sender, System.IO.Ports.SerialPinChangedEventArgs e)
@@ -94,6 +103,7 @@ namespace USART_Monitor
             {
                 this.toolStripButtonConnect.Enabled = false;
                 this.toolStripButtonDisconnect.Enabled = true;
+                this.cache.bConnected = true;
             }
 
         }
@@ -104,7 +114,7 @@ namespace USART_Monitor
             {
                 this.toolStripButtonConnect.Enabled = true;
                 this.toolStripButtonDisconnect.Enabled = false;
-                this.serialPort1.Close();
+                this.serialPort1.Close(); // TODO: exception throws when serialPort1_dataReceived not return
             }
         }
 

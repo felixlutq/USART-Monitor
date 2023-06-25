@@ -13,36 +13,81 @@ namespace USART_Monitor
     public partial class PortsForm : Form
     {
         private Cache cache;
+        private MainForm mainForm;
 
-        public PortsForm(Cache cache)
+        public PortsForm(ref Cache cache, ref MainForm mainForm)
         {
             InitializeComponent();
             this.cache = cache;
-            ListPorts();
+            this.mainForm = mainForm;
+            updatePortList();
+            this.applyButton.Enabled = false;
         }
 
-        private void ListPorts()
+        private void updatePortList()
         {
             foreach(String name in this.cache.availableSerialPortNames)
             {
-                checkedListBoxPortsList.Items.Add(name);
+                checkedListBoxPortsList.Items.Add(name, this.cache.selectedPortNames.Contains(name));
             }
         }
 
         private void applyButton_Click(object sender, EventArgs e)
         {
-            Array.Clear(this.cache.selectedPortNames, 0, this.cache.selectedPortNames.Length);
-            
-            for(int i = 0; i < this.checkedListBoxPortsList.CheckedItems.Count; i ++) {
-                this.cache.selectedPortNames[i] = this.checkedListBoxPortsList.CheckedItems[i].ToString();
-            }
-            Console.WriteLine("selectedPortNames Length: " + this.cache.selectedPortNames.Length);
-            foreach(var it in this.cache.selectedPortNames)
+            if (this.cache.bConnected)
             {
-                Console.WriteLine(it);
+                MessageBox.Show("Disconnect before change ports.");
+                return;
             }
-            
-            
+            if (this.checkedListBoxPortsList.CheckedItems.Count == 0)
+            {
+                MessageBox.Show("No port selected.");
+                return;
+            }
+            if (this.checkedListBoxPortsList.CheckedItems.Count > Cache.maxSuportPortsCount)
+            {
+                MessageBox.Show("Too many ports selected, maximum is " + Cache.maxSuportPortsCount);
+                return;
+            }
+
+            bool bSelectionChanged = false;
+            var names = new List<String>(this.checkedListBoxPortsList.CheckedItems.Count);
+            for (var i = 0; i < this.checkedListBoxPortsList.CheckedItems.Count; i ++)
+            {
+                names.Add(checkedListBoxPortsList.CheckedItems[i].ToString());
+            }
+
+            if (names.Count != this.cache.selectedPortNames.Count)
+            {
+                bSelectionChanged = true;
+            } else
+            {
+                names.Sort();
+                this.cache.selectedPortNames.Sort();
+                for (int i = 0; i < this.cache.selectedPortNames.Count; i ++)
+                {
+                    if (names[i].Equals(this.cache.selectedPortNames[i]) == false)
+                    {
+                        bSelectionChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (bSelectionChanged)
+            {
+                this.cache.selectedPortNames.Clear();
+                this.cache.selectedPortNames.AddRange(names);
+            }
+
+            this.applyButton.Enabled = false;
+            this.mainForm.EnableConnectButton(true);
+            this.mainForm.EnableDisconnectButton(false);
+        }
+
+        private void checkedListBoxPortsList_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            this.applyButton.Enabled = true;
         }
     }
 }

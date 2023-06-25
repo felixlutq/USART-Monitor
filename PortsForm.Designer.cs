@@ -42,6 +42,7 @@ namespace USART_Monitor
             this.checkedListBoxPortsList.Size = new System.Drawing.Size(187, 259);
             this.checkedListBoxPortsList.Sorted = true;
             this.checkedListBoxPortsList.TabIndex = 0;
+            this.checkedListBoxPortsList.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxPortsList_ItemCheck);
             // 
             // applyButton
             // 

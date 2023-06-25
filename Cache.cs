@@ -9,13 +9,14 @@ namespace USART_Monitor
     public class Cache
     {
         public const int maxSuportPortsCount = 2;
-        public String[] availableSerialPortNames;
-        public String[] selectedPortNames;
+        public List<String> availableSerialPortNames;
+        public List<String> selectedPortNames;
+        public bool bConnected;
         public Cache()
         {
-            this.selectedPortNames = new String[maxSuportPortsCount];
-            this.availableSerialPortNames = new String[0];
+            this.bConnected = false;
+            this.selectedPortNames = new List<string>(maxSuportPortsCount);
+            this.availableSerialPortNames = new List<string>();
         }
-
     }
 }
