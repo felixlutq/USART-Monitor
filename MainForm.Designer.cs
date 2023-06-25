@@ -38,6 +38,7 @@ namespace USART_Monitor
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.toolStripButtonDisconnect = new System.Windows.Forms.ToolStripButton();
+            this.serialPort2 = new System.IO.Ports.SerialPort(this.components);
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -113,6 +114,10 @@ namespace USART_Monitor
             this.toolStripButtonDisconnect.Text = "Disconnect";
             this.toolStripButtonDisconnect.Click += new System.EventHandler(this.toolStripButtonDisconnect_Click);
             // 
+            // serialPort2
+            // 
+            this.serialPort2.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort2_DataReceived);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -121,6 +126,7 @@ namespace USART_Monitor
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.toolStrip1);
             this.Name = "MainForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "USART Monitor";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
@@ -138,6 +144,7 @@ namespace USART_Monitor
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.ToolStripButton toolStripButtonConnect;
         private System.Windows.Forms.ToolStripButton toolStripButtonDisconnect;
+        private System.IO.Ports.SerialPort serialPort2;
     }
 }
 

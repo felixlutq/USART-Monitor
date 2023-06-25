@@ -74,20 +74,27 @@ namespace USART_Monitor
                 }
             }
 
+            this.applyButton.Enabled = false;
+
             if (bSelectionChanged)
             {
                 this.cache.selectedPortNames.Clear();
                 this.cache.selectedPortNames.AddRange(names);
+                this.DialogResult = DialogResult.Yes;
+            } else
+            {
+                this.DialogResult = DialogResult.No;
             }
-
-            this.applyButton.Enabled = false;
-            this.mainForm.EnableConnectButton(true);
-            this.mainForm.EnableDisconnectButton(false);
         }
 
         private void checkedListBoxPortsList_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             this.applyButton.Enabled = true;
+        }
+
+        private void buttonClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

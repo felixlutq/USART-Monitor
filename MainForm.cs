@@ -28,16 +28,6 @@ namespace USART_Monitor
             thread.Start();  
         }
 
-        public void EnableConnectButton(bool enable)
-        {
-            toolStripButtonConnect.Enabled = enable;
-        }
-
-        public void EnableDisconnectButton(bool enable)
-        {
-            toolStripButtonDisconnect.Enabled = enable;
-        }
-
         private void portScan()
         {
             while (true)
@@ -57,8 +47,13 @@ namespace USART_Monitor
         {
             MainForm mainForm = this;
             PortsForm portsForm = new PortsForm(ref this.cache, ref mainForm);
-            portsForm.Show();
-            portsForm.SetDesktopLocation(this.Location.X, this.Location.Y); 
+            portsForm.StartPosition = FormStartPosition.Manual;
+            portsForm.Location = new Point(this.Location.X + this.Width / 2 - portsForm.Width / 2, this.Location.Y + 30);
+            if (portsForm.ShowDialog() == DialogResult.Yes)
+            {
+                toolStripButtonConnect.Enabled = true;
+                toolStripButtonDisconnect.Enabled = false;
+            }
         }
 
         private void serialPort1_pinChanged(object sender, System.IO.Ports.SerialPinChangedEventArgs e)
@@ -93,35 +88,55 @@ namespace USART_Monitor
 
         private void toolStripButtonConnect_Click(object sender, EventArgs e)
         {
-
-            this.serialPort1.PortName = this.cache.selectedPortNames[0];
-            if (this.serialPort1.IsOpen == false)
+            if (this.cache.selectedPortNames.Count > 0)
             {
-                this.serialPort1.Open();
+                this.serialPort1.PortName = this.cache.selectedPortNames[0];
+                if (this.serialPort1.IsOpen == false)
+                {
+                    this.serialPort1.Open();
+                }
             }
-            if (this.serialPort1.IsOpen)
+            if (this.cache.selectedPortNames.Count > 1)
+            {
+                this.serialPort2.PortName = this.cache.selectedPortNames[1];
+                if (this.serialPort2.IsOpen == false)
+                {
+                    this.serialPort2.Open();
+                }
+            }
+            if (this.serialPort1.IsOpen || this.serialPort2.IsOpen)
             {
                 this.toolStripButtonConnect.Enabled = false;
                 this.toolStripButtonDisconnect.Enabled = true;
                 this.cache.bConnected = true;
             }
-
         }
 
         private void toolStripButtonDisconnect_Click(object sender, EventArgs e)
         {
             if (this.serialPort1.IsOpen)
             {
-                this.toolStripButtonConnect.Enabled = true;
-                this.toolStripButtonDisconnect.Enabled = false;
                 this.serialPort1.Close(); // TODO: exception throws when serialPort1_dataReceived not return
             }
+            if (this.serialPort2.IsOpen)
+            {
+                this.serialPort2.Close();
+            }
+            this.toolStripButtonConnect.Enabled = true;
+            this.toolStripButtonDisconnect.Enabled = false;
         }
 
         private void autoScrollDown(object sender, EventArgs e)
         {
             this.textBox1.SelectionStart = textBox1.TextLength;
             this.textBox1.ScrollToCaret();
+        }
+
+        private void serialPort2_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        {
+            String newLine = this.serialPort2.ReadLine();
+            Console.WriteLine(newLine);
+            writeTextSafe(newLine);
         }
     }
 }
