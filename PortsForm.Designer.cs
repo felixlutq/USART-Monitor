@@ -74,7 +74,7 @@ namespace USART_Monitor
             this.Controls.Add(this.applyButton);
             this.Controls.Add(this.checkedListBoxPortsList);
             this.Name = "PortsForm";
-            this.Text = "PortsForm";
+            this.Text = "Ports";
             this.ResumeLayout(false);
 
         }

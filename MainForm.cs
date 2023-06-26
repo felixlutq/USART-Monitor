@@ -8,12 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace USART_Monitor
 {
     public partial class MainForm : Form
     {
         private Cache cache;
+        private ConcurrentBag<String> concurrentBag;
         private delegate void SafeCallDelegate(string text);
         
 
@@ -23,9 +25,13 @@ namespace USART_Monitor
             this.toolStripButtonConnect.Enabled = false;
             this.toolStripButtonDisconnect.Enabled = false;
             cache = new Cache();
+            concurrentBag = new ConcurrentBag<string>();
             Thread thread = new Thread(new ThreadStart(this.portScan));
             thread.IsBackground = true;
-            thread.Start();  
+            thread.Start();
+            Thread thread2 = new Thread(new ThreadStart(this.saveAndPrintDataThreadSafe));
+            thread2.IsBackground = true;
+            thread2.Start();
         }
 
         private void portScan()
@@ -40,7 +46,14 @@ namespace USART_Monitor
 
         private void toolStripButtonSettings_Click(object sender, EventArgs e)
         {
-
+            MainForm mainForm = this;
+            SettingsForm settingsForm = new SettingsForm(ref this.cache);
+            settingsForm.StartPosition = FormStartPosition.Manual;
+            settingsForm.Location = new Point(this.Location.X + this.Width / 2 - settingsForm.Width / 2, this.Location.Y + 30);
+            if (settingsForm.ShowDialog() == DialogResult.Yes)
+            {
+                Console.WriteLine("new settings available.");
+            }
         }
 
         private void toolStripButtonPorts_Click(object sender, EventArgs e)
@@ -66,11 +79,55 @@ namespace USART_Monitor
             Console.WriteLine("error.");
         }
 
+        private void saveAndPrintDataThreadSafe()
+        {
+            while (true)
+            {
+                String text;
+                if (concurrentBag.TryTake(out text))
+                {
+                    writeTextSafe(text);
+                }
+                else
+                {
+                    Thread.Sleep(100);
+                }
+
+            }
+        }
+
+        private void processDataThreadSafe(System.IO.Ports.SerialPort serialPort)
+        {
+            StringBuilder newLine = new StringBuilder(1024);
+            if (this.cache.bShowDateTime)
+            {
+                newLine.Append(DateTime.Now.ToString(this.cache.dateTimeFormat));
+                newLine.Append("  ");
+            }
+            if (this.cache.selectedPortNames.Count > 1)
+            {
+                newLine.Append(serialPort.PortName);
+                newLine.Append("  ");
+            }
+            if (this.cache.bShowRXTX)
+            {
+                newLine.Append("RX  ");
+            }
+            if (newLine.Length > 0)
+            {
+                newLine.Append("    ");
+            }
+            newLine.Append(serialPort.ReadLine());
+            concurrentBag.Add(newLine.ToString());
+        }
+
         private void serialPort1_dataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
-            String newLine = this.serialPort1.ReadLine();
-            Console.WriteLine(newLine);
-            writeTextSafe(newLine);
+            processDataThreadSafe(this.serialPort1);
+        }
+        private void serialPort2_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        {
+            processDataThreadSafe(this.serialPort2);
         }
 
         private void writeTextSafe(string text)
@@ -124,6 +181,7 @@ namespace USART_Monitor
             }
             this.toolStripButtonConnect.Enabled = true;
             this.toolStripButtonDisconnect.Enabled = false;
+            this.cache.bConnected = false;
         }
 
         private void autoScrollDown(object sender, EventArgs e)
@@ -132,11 +190,5 @@ namespace USART_Monitor
             this.textBox1.ScrollToCaret();
         }
 
-        private void serialPort2_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
-        {
-            String newLine = this.serialPort2.ReadLine();
-            Console.WriteLine(newLine);
-            writeTextSafe(newLine);
-        }
     }
 }
