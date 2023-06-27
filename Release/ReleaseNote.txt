@@ -1,4 +1,4 @@
 0.7.0
 27/06/2023
 Be able to read serial input and print to file and screen.
-No test, may has many bugs.
+No test. May have many bugs.
