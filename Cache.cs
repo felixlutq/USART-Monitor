@@ -25,7 +25,7 @@ namespace USART_Monitor
             this.availableSerialPortNames = new List<string>();
 
             dateTimeFormat = "MM/dd/yyyy hh:mm:ss.fff tt";
-            logFileName = "C:/USART-Monitor-log.txt";
+            logFileName = "D:/USART-log.txt";
 
             bShowDateTime = true;
         }

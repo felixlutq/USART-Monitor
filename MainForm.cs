@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Security.Permissions;
 
 namespace USART_Monitor
 {
@@ -52,7 +54,7 @@ namespace USART_Monitor
             settingsForm.Location = new Point(this.Location.X + this.Width / 2 - settingsForm.Width / 2, this.Location.Y + 30);
             if (settingsForm.ShowDialog() == DialogResult.Yes)
             {
-                Console.WriteLine("new settings available.");
+                //TODO: show new settings applied succeed on status bar or somewhere else.
             }
         }
 
@@ -87,6 +89,7 @@ namespace USART_Monitor
                 if (concurrentBag.TryTake(out text))
                 {
                     writeTextSafe(text);
+                    appendTextToFile(this.cache.logFileName, text);
                 }
                 else
                 {
@@ -94,6 +97,14 @@ namespace USART_Monitor
                 }
 
             }
+        }
+
+        private void appendTextToFile(String fileName, String text)
+        {
+            FileStream fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Write);
+            byte[] bytes = new UTF8Encoding(true).GetBytes(text);
+            fs.Write(bytes, 0, bytes.Length);
+            fs.Close();
         }
 
         private void processDataThreadSafe(System.IO.Ports.SerialPort serialPort)

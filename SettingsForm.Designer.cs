@@ -29,8 +29,6 @@ namespace USART_Monitor
         /// </summary>
         private void InitializeComponent()
         {
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.directoryEntry1 = new System.DirectoryServices.DirectoryEntry();
             this.textBoxLogFileName = new System.Windows.Forms.TextBox();
             this.Browse = new System.Windows.Forms.Button();
             this.LogFile = new System.Windows.Forms.Label();
@@ -40,21 +38,16 @@ namespace USART_Monitor
             this.checkBoxShowRXTX = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.FileName = "openFileDialog1";
-            // 
             // textBoxLogFileName
             // 
-            this.textBoxLogFileName.Location = new System.Drawing.Point(68, 77);
+            this.textBoxLogFileName.Location = new System.Drawing.Point(37, 87);
             this.textBoxLogFileName.Name = "textBoxLogFileName";
-            this.textBoxLogFileName.Size = new System.Drawing.Size(100, 20);
+            this.textBoxLogFileName.Size = new System.Drawing.Size(125, 20);
             this.textBoxLogFileName.TabIndex = 4;
-            this.textBoxLogFileName.Text = "log.txt";
             // 
             // Browse
             // 
-            this.Browse.Location = new System.Drawing.Point(174, 77);
+            this.Browse.Location = new System.Drawing.Point(153, 84);
             this.Browse.Name = "Browse";
             this.Browse.Size = new System.Drawing.Size(60, 23);
             this.Browse.TabIndex = 5;
@@ -65,7 +58,7 @@ namespace USART_Monitor
             // LogFile
             // 
             this.LogFile.AutoSize = true;
-            this.LogFile.Location = new System.Drawing.Point(18, 80);
+            this.LogFile.Location = new System.Drawing.Point(34, 68);
             this.LogFile.Name = "LogFile";
             this.LogFile.Size = new System.Drawing.Size(44, 13);
             this.LogFile.TabIndex = 6;
@@ -94,7 +87,7 @@ namespace USART_Monitor
             // checkBoxDateTime
             // 
             this.checkBoxDateTime.AutoSize = true;
-            this.checkBoxDateTime.Location = new System.Drawing.Point(46, 45);
+            this.checkBoxDateTime.Location = new System.Drawing.Point(37, 40);
             this.checkBoxDateTime.Name = "checkBoxDateTime";
             this.checkBoxDateTime.Size = new System.Drawing.Size(134, 17);
             this.checkBoxDateTime.TabIndex = 9;
@@ -104,7 +97,7 @@ namespace USART_Monitor
             // checkBoxShowRXTX
             // 
             this.checkBoxShowRXTX.AutoSize = true;
-            this.checkBoxShowRXTX.Location = new System.Drawing.Point(46, 22);
+            this.checkBoxShowRXTX.Location = new System.Drawing.Point(37, 17);
             this.checkBoxShowRXTX.Name = "checkBoxShowRXTX";
             this.checkBoxShowRXTX.Size = new System.Drawing.Size(107, 17);
             this.checkBoxShowRXTX.TabIndex = 10;
@@ -131,8 +124,6 @@ namespace USART_Monitor
         }
 
         #endregion
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.DirectoryServices.DirectoryEntry directoryEntry1;
         private System.Windows.Forms.TextBox textBoxLogFileName;
         private System.Windows.Forms.Button Browse;
         private System.Windows.Forms.Label LogFile;
