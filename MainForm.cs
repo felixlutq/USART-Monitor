@@ -19,13 +19,11 @@ namespace USART_Monitor
         private Cache cache;
         private ConcurrentBag<String> concurrentBag;
         private delegate void SafeCallDelegate(string text);
-        
 
         public MainForm()
         {
             InitializeComponent();
-            this.toolStripButtonConnect.Enabled = false;
-            this.toolStripButtonDisconnect.Enabled = false;
+            initialiseComponents();
             cache = new Cache();
             concurrentBag = new ConcurrentBag<string>();
             Thread thread = new Thread(new ThreadStart(this.portScan));
@@ -34,6 +32,21 @@ namespace USART_Monitor
             Thread thread2 = new Thread(new ThreadStart(this.saveAndPrintDataThreadSafe));
             thread2.IsBackground = true;
             thread2.Start();
+        }
+
+        private void initialiseComponents()
+        {
+            clearSerialPortNames();
+            this.toolStripButtonConnect.Enabled = false;
+            this.toolStripButtonDisconnect.Enabled = false;
+            comboBoxBaudrate.SelectedItem = "9600";
+            comboBoxDataType.SelectedItem = "text";
+        }
+
+        private void clearSerialPortNames()
+        {
+            this.serialPort1.PortName = "COM";
+            this.serialPort2.PortName = "COM";
         }
 
         private void portScan()
@@ -68,6 +81,22 @@ namespace USART_Monitor
             {
                 toolStripButtonConnect.Enabled = true;
                 toolStripButtonDisconnect.Enabled = false;
+                clearSerialPortNames();
+                comboBoxSendTo.Items.Clear();
+                comboBoxSendTo.Text = "";
+                if (this.cache.selectedPortNames.Count > 0)
+                {
+                    this.serialPort1.PortName = this.cache.selectedPortNames[0];
+                    comboBoxSendTo.Items.Add(this.cache.selectedPortNames[0]);
+                    comboBoxSendTo.Text = this.cache.selectedPortNames[0];
+                }
+                if (this.cache.selectedPortNames.Count > 1)
+                {
+                    this.serialPort2.PortName = this.cache.selectedPortNames[1];
+                    comboBoxSendTo.Items.Add(this.cache.selectedPortNames[1]);
+                    comboBoxSendTo.Items.Add("Both");
+                    comboBoxSendTo.Text = "Both";
+                }
             }
         }
 
@@ -156,19 +185,19 @@ namespace USART_Monitor
 
         private void toolStripButtonConnect_Click(object sender, EventArgs e)
         {
-            if (this.cache.selectedPortNames.Count > 0)
+            if (this.cache.selectedPortNames.Contains(this.serialPort1.PortName))
             {
-                this.serialPort1.PortName = this.cache.selectedPortNames[0];
                 if (this.serialPort1.IsOpen == false)
                 {
+                    this.serialPort1.BaudRate = this.cache.baudRate;
                     this.serialPort1.Open();
                 }
             }
-            if (this.cache.selectedPortNames.Count > 1)
+            if (this.cache.selectedPortNames.Contains(this.serialPort2.PortName))
             {
-                this.serialPort2.PortName = this.cache.selectedPortNames[1];
                 if (this.serialPort2.IsOpen == false)
                 {
+                    this.serialPort2.BaudRate = this.cache.baudRate;
                     this.serialPort2.Open();
                 }
             }
@@ -201,5 +230,82 @@ namespace USART_Monitor
             this.textBox1.ScrollToCaret();
         }
 
+        private bool sendInputToSerialPort(System.IO.Ports.SerialPort port)
+        {
+            byte[] bytes = null;
+            if (comboBoxSendTo.Text.Contains("text"))
+            {
+                bytes = new UTF8Encoding(true).GetBytes(textBoxInput.Text);
+            }
+            else if (comboBoxSendTo.Text.Contains("int"))
+            {
+                
+            }
+            else if (comboBoxSendTo.Text.Contains("short"))
+            {
+
+            }
+            else if (comboBoxSendTo.Text.Contains("byte"))
+            {
+
+            }
+            else if (comboBoxSendTo.Text.Contains("double"))
+            {
+
+            }
+            else if (comboBoxSendTo.Text.Contains("float"))
+            {
+
+            }
+            
+            if (port.IsOpen && bytes != null)
+            {
+                port.Write(bytes, 0, bytes.Length);
+                return true;
+            }
+            return false;
+        }
+
+        private bool verifyUserInput()
+        {
+            // TODO: check int, short, byte, double, float
+            return true;
+        }
+
+        private void buttonSend_Click(object sender, EventArgs e)
+        {
+            String inputString = textBoxInput.Text;
+            if (verifyUserInput() == false)
+            {
+                // TODO: show warning or help information
+                return;
+            }
+            if (inputString.Length == 0)
+            {
+                return;
+            }
+            if (this.cache.selectedPortNames.Contains(this.serialPort1.PortName))
+            {
+                sendInputToSerialPort(this.serialPort1);
+            }
+            if (this.cache.selectedPortNames.Contains(this.serialPort2.PortName))
+            {
+                sendInputToSerialPort(this.serialPort2);
+            }
+        }
+
+        private void comboBoxBaudrate_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            int baudRate = int.Parse(comboBoxBaudrate.Text);
+            this.cache.baudRate = baudRate;
+            if (this.serialPort1.IsOpen)
+            {
+                this.serialPort1.BaudRate = baudRate;
+            }
+            if (this.serialPort2.IsOpen)
+            {
+                this.serialPort2.BaudRate = baudRate;
+            }
+        }
     }
 }
