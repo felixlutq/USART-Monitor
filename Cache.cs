@@ -18,6 +18,8 @@ namespace USART_Monitor
         public String logFileName;
         public bool bShowDateTime;
         public bool bShowRXTX;
+
+        public int baudRate; 
         public Cache()
         {
             this.bConnected = false;
@@ -28,6 +30,8 @@ namespace USART_Monitor
             logFileName = "D:/USART-log.txt";
 
             bShowDateTime = true;
+
+            baudRate = 9600;
         }
     }
 }
