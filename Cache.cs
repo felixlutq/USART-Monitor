@@ -18,6 +18,7 @@ namespace USART_Monitor
         public String logFileName;
         public bool bShowDateTime;
         public bool bShowRXTX;
+        public int readTimeoutMilliseconds;
 
         public int baudRate; 
         public Cache()
@@ -32,6 +33,7 @@ namespace USART_Monitor
             bShowDateTime = true;
 
             baudRate = 9600;
+            readTimeoutMilliseconds = 100;
         }
     }
 }

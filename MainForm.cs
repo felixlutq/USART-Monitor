@@ -117,6 +117,7 @@ namespace USART_Monitor
                 String text;
                 if (concurrentBag.TryTake(out text))
                 {
+                    text += "\r\n";
                     writeTextSafe(text);
                     appendTextToFile(this.cache.logFileName, text);
                 }
@@ -157,7 +158,36 @@ namespace USART_Monitor
             {
                 newLine.Append("    ");
             }
-            newLine.Append(serialPort.ReadLine());
+            String str = "";
+
+            lock (serialPort)
+            {
+                if (serialPort.IsOpen)
+                {
+                    try
+                    {
+                        str = serialPort.ReadLine();
+                    } catch (TimeoutException e)
+                    {
+                        try
+                        {
+                            str = serialPort.ReadExisting();
+                        } catch (Exception e2)
+                        {
+                            return;
+                        }
+                    } catch (Exception e)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            newLine.Append(str);
             concurrentBag.Add(newLine.ToString());
         }
 
@@ -179,7 +209,7 @@ namespace USART_Monitor
             }
             else
             {
-                textBox1.Text = textBox1.Text + "\n" + text;
+                textBox1.Text = textBox1.Text + text;
             }
         }
 
@@ -190,6 +220,7 @@ namespace USART_Monitor
                 if (this.serialPort1.IsOpen == false)
                 {
                     this.serialPort1.BaudRate = this.cache.baudRate;
+                    this.serialPort1.ReadTimeout = this.cache.readTimeoutMilliseconds;
                     this.serialPort1.Open();
                 }
             }
@@ -198,6 +229,7 @@ namespace USART_Monitor
                 if (this.serialPort2.IsOpen == false)
                 {
                     this.serialPort2.BaudRate = this.cache.baudRate;
+                    this.serialPort2.ReadTimeout = this.cache.readTimeoutMilliseconds;
                     this.serialPort2.Open();
                 }
             }
@@ -213,10 +245,12 @@ namespace USART_Monitor
         {
             if (this.serialPort1.IsOpen)
             {
-                this.serialPort1.Close(); // TODO: exception throws when serialPort1_dataReceived not return
+                this.serialPort1.Dispose();
+                this.serialPort1.Close();
             }
             if (this.serialPort2.IsOpen)
             {
+                this.serialPort2.Dispose();
                 this.serialPort2.Close();
             }
             this.toolStripButtonConnect.Enabled = true;
