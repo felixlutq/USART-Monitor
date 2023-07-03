@@ -45,8 +45,8 @@ namespace USART_Monitor
 
         private void clearSerialPortNames()
         {
-            this.serialPort1.PortName = "COM";
-            this.serialPort2.PortName = "COM";
+            this.serialPort1.PortName = "None";
+            this.serialPort2.PortName = "None";
         }
 
         private void portScan()
@@ -117,7 +117,7 @@ namespace USART_Monitor
                 String text;
                 if (concurrentBag.TryTake(out text))
                 {
-                    text += "\r\n";
+                    text += "\r\n"; // TODO: when baudrate not match and receives strange characters, \r\n not always work.
                     writeTextSafe(text);
                     appendTextToFile(this.cache.logFileName, text);
                 }
@@ -267,32 +267,102 @@ namespace USART_Monitor
         private bool sendInputToSerialPort(System.IO.Ports.SerialPort port)
         {
             byte[] bytes = null;
-            if (comboBoxSendTo.Text.Contains("text"))
+            if (comboBoxDataType.Text.Contains("text"))
             {
                 bytes = new UTF8Encoding(true).GetBytes(textBoxInput.Text);
             }
-            else if (comboBoxSendTo.Text.Contains("int"))
+            else if (comboBoxDataType.Text.Contains("int"))
             {
-                
+                int intValue = 0;
+                try
+                {
+                    intValue = int.Parse(textBoxInput.Text);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message); // TODO: show warning or help message
+                    return false;
+                }
+                bytes = BitConverter.GetBytes(intValue);
+                if (BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(bytes);
+                }
             }
-            else if (comboBoxSendTo.Text.Contains("short"))
+            else if (comboBoxDataType.Text.Contains("short"))
             {
+                short shortValue = 0;
+                try
+                {
+                    shortValue = short.Parse(textBoxInput.Text);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message); // TODO: show warning or help message
+                    return false;
+                }
+                bytes = BitConverter.GetBytes(shortValue);
+                if (BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(bytes);
+                }
+            }
+            else if (comboBoxDataType.Text.Contains("byte"))
+            {
+                byte byteValue = 0;
+                try
+                {
+                    byteValue = byte.Parse(textBoxInput.Text);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message); // TODO: show warning or help message
+                    return false;
+                }
+                bytes = new byte[1];
+                bytes[0] = byteValue;
+            }
+            else if (comboBoxDataType.Text.Contains("double"))
+            {
+                double doubleValue = 0;
+                try
+                {
+                    doubleValue = double.Parse(textBoxInput.Text);
+                } catch (Exception e)
+                {
+                    Console.WriteLine(e.Message); // TODO: show warning or help message
+                    return false;
+                }
+                bytes = BitConverter.GetBytes(doubleValue);
+                if (BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(bytes);
+                }
+            }
+            else if (comboBoxDataType.Text.Contains("float"))
+            {
+                float floatValue = 0;
+                try
+                {
+                    floatValue = float.Parse(textBoxInput.Text);
+                } catch (Exception e)
+                {
+                    Console.WriteLine(e.Message); // TODO: show warning or help message
+                    return false;
+                }
+                bytes = BitConverter.GetBytes(floatValue);
+                if (BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(bytes);
+                }
+            }
 
-            }
-            else if (comboBoxSendTo.Text.Contains("byte"))
+            if (bytes == null)
             {
-
+                return false;
             }
-            else if (comboBoxSendTo.Text.Contains("double"))
-            {
 
-            }
-            else if (comboBoxSendTo.Text.Contains("float"))
-            {
-
-            }
-            
-            if (port.IsOpen && bytes != null)
+            if (port.IsOpen)
             {
                 port.Write(bytes, 0, bytes.Length);
                 return true;
@@ -318,13 +388,20 @@ namespace USART_Monitor
             {
                 return;
             }
-            if (this.cache.selectedPortNames.Contains(this.serialPort1.PortName))
+            bool bSendToBothPorts = this.comboBoxSendTo.Text.Contains("Both");
+            bool bSendSucceed = false;
+            if (bSendToBothPorts || this.comboBoxSendTo.Text.Contains(this.serialPort1.PortName))
             {
-                sendInputToSerialPort(this.serialPort1);
+                bSendSucceed = sendInputToSerialPort(this.serialPort1);
             }
-            if (this.cache.selectedPortNames.Contains(this.serialPort2.PortName))
+            if (bSendToBothPorts || this.comboBoxSendTo.Text.Contains(this.serialPort2.PortName))
             {
-                sendInputToSerialPort(this.serialPort2);
+                bSendSucceed = sendInputToSerialPort(this.serialPort2);
+            }
+            Console.WriteLine(bSendSucceed);
+            if (bSendSucceed)
+            {
+                textBoxInput.Clear();
             }
         }
 
