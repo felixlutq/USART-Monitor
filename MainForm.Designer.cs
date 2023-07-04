@@ -146,14 +146,16 @@ namespace USART_Monitor
             // 
             // comboBoxDataType
             // 
+            this.comboBoxDataType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxDataType.FormattingEnabled = true;
             this.comboBoxDataType.Items.AddRange(new object[] {
             "text",
-            "int(32 bits)",
-            "short(16 bits)",
             "byte(8 bits)",
-            "double(64 bits)",
-            "float(32 bits)"});
+            "short(16 bits)",
+            "int(32 bits)",
+            "long(64 bits)",
+            "float(32 bits)",
+            "double(64 bits)"});
             this.comboBoxDataType.Location = new System.Drawing.Point(694, 513);
             this.comboBoxDataType.Name = "comboBoxDataType";
             this.comboBoxDataType.Size = new System.Drawing.Size(78, 21);
@@ -161,6 +163,7 @@ namespace USART_Monitor
             // 
             // comboBoxBaudrate
             // 
+            this.comboBoxBaudrate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxBaudrate.FormattingEnabled = true;
             this.comboBoxBaudrate.Items.AddRange(new object[] {
             "110",
@@ -225,6 +228,7 @@ namespace USART_Monitor
             // 
             // comboBoxSendTo
             // 
+            this.comboBoxSendTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxSendTo.FormattingEnabled = true;
             this.comboBoxSendTo.Location = new System.Drawing.Point(694, 488);
             this.comboBoxSendTo.Name = "comboBoxSendTo";

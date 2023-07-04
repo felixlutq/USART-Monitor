@@ -39,6 +39,7 @@ namespace USART_Monitor
             clearSerialPortNames();
             this.toolStripButtonConnect.Enabled = false;
             this.toolStripButtonDisconnect.Enabled = false;
+            this.buttonSend.Enabled = false;
             comboBoxBaudrate.SelectedItem = "9600";
             comboBoxDataType.SelectedItem = "text";
         }
@@ -233,10 +234,12 @@ namespace USART_Monitor
                     this.serialPort2.Open();
                 }
             }
+
             if (this.serialPort1.IsOpen || this.serialPort2.IsOpen)
             {
                 this.toolStripButtonConnect.Enabled = false;
                 this.toolStripButtonDisconnect.Enabled = true;
+                this.buttonSend.Enabled = true;
                 this.cache.bConnected = true;
             }
         }
@@ -255,6 +258,7 @@ namespace USART_Monitor
             }
             this.toolStripButtonConnect.Enabled = true;
             this.toolStripButtonDisconnect.Enabled = false;
+            this.buttonSend.Enabled = false;
             this.cache.bConnected = false;
         }
 
@@ -351,6 +355,21 @@ namespace USART_Monitor
                     return false;
                 }
                 bytes = BitConverter.GetBytes(floatValue);
+                if (BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(bytes);
+                }
+            } else if (comboBoxDataType.Text.Contains("long"))
+            {
+                long longValue = 0;
+                try
+                {
+                    longValue = long.Parse(textBoxInput.Text);
+                } catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    return false;
+                }
                 if (BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(bytes);
