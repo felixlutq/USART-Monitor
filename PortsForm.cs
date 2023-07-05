@@ -14,21 +14,62 @@ namespace USART_Monitor
     {
         private Cache cache;
         private MainForm mainForm;
+        public delegate void AddPortNameDelegate(string portName);
+        public delegate void RemovePortNameDelegate(string portName);
 
         public PortsForm(ref Cache cache, ref MainForm mainForm)
         {
             InitializeComponent();
             this.cache = cache;
             this.mainForm = mainForm;
-            updatePortList();
             this.applyButton.Enabled = false;
         }
 
-        private void updatePortList()
+        public void addPortName(String portName)
         {
-            foreach(String name in this.cache.availableSerialPortNames)
+            if (checkedListBoxPortsList.InvokeRequired)
             {
-                checkedListBoxPortsList.Items.Add(name, this.cache.selectedPortNames.Contains(name));
+                var d = new AddPortNameDelegate(addPortName);
+                checkedListBoxPortsList.Invoke(d, new object[] { portName });
+            }
+            else
+            {
+                bool bPortNameToAddExists = false;
+                for (int i = 0; i < checkedListBoxPortsList.Items.Count; i++)
+                {
+                    if (checkedListBoxPortsList.Items[i].Equals(portName))
+                    {
+                        bPortNameToAddExists = true;
+                    }
+                }
+                if (bPortNameToAddExists == false)
+                {
+                    checkedListBoxPortsList.Items.Add(portName);
+                }
+            }
+        }
+
+        public void removePortName(String portName)
+        {
+            if (checkedListBoxPortsList.InvokeRequired)
+            {
+                var d = new RemovePortNameDelegate(removePortName);
+                checkedListBoxPortsList.Invoke(d, new object[] { portName });
+            }
+            else
+            {
+                bool bPortNameToRemoveExists = false;
+                for (int i = 0; i < checkedListBoxPortsList.Items.Count; i++)
+                {
+                    if (checkedListBoxPortsList.Items[i].Equals(portName))
+                    {
+                        bPortNameToRemoveExists = true;
+                    }
+                }
+                if (bPortNameToRemoveExists)
+                {
+                    checkedListBoxPortsList.Items.Remove(portName);
+                }
             }
         }
 

@@ -11,6 +11,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Security.Permissions;
+using System.Management;
 
 namespace USART_Monitor
 {
@@ -19,16 +20,26 @@ namespace USART_Monitor
         private Cache cache;
         private ConcurrentBag<String> concurrentBag;
         private delegate void SafeCallDelegate(string text);
+        private PortsForm portsForm;
 
         public MainForm()
         {
             InitializeComponent();
             initialiseComponents();
             cache = new Cache();
+            cache.availableSerialPortNames.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             concurrentBag = new ConcurrentBag<string>();
-            Thread thread = new Thread(new ThreadStart(this.portScan));
-            thread.IsBackground = true;
-            thread.Start();
+
+            WqlEventQuery insertQuery = new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 2");
+            ManagementEventWatcher insertWatcher = new ManagementEventWatcher(insertQuery);
+            insertWatcher.EventArrived += new EventArrivedEventHandler(OnDeviceInserted);
+            insertWatcher.Start();
+
+            WqlEventQuery removeQuery = new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 3");
+            ManagementEventWatcher removeWatcher = new ManagementEventWatcher(removeQuery);
+            removeWatcher.EventArrived += new EventArrivedEventHandler(OnDeviceRemoved);
+            removeWatcher.Start();
+
             Thread thread2 = new Thread(new ThreadStart(this.saveAndPrintDataThreadSafe));
             thread2.IsBackground = true;
             thread2.Start();
@@ -37,6 +48,7 @@ namespace USART_Monitor
         private void initialiseComponents()
         {
             clearSerialPortNames();
+            this.portsForm = null;
             this.toolStripButtonConnect.Enabled = false;
             this.toolStripButtonDisconnect.Enabled = false;
             this.buttonSend.Enabled = false;
@@ -44,20 +56,44 @@ namespace USART_Monitor
             comboBoxDataType.SelectedItem = "text";
         }
 
+        private void OnDeviceInserted(object sender, EventArrivedEventArgs e)
+        {
+            // TODO: how to get device info from the event
+            String []portNames = System.IO.Ports.SerialPort.GetPortNames();
+            foreach(var name in portNames)
+            {
+                if (this.cache.availableSerialPortNames.Contains(name) == false)
+                {
+                    this.cache.availableSerialPortNames.Add(name);
+                    if (this.portsForm != null)
+                    {
+                        this.portsForm.addPortName(name);
+                    }
+                }
+            }
+        }
+
+        private void OnDeviceRemoved(object sender, EventArrivedEventArgs e)
+        {
+            String[] portNames = System.IO.Ports.SerialPort.GetPortNames();
+            String[] cachedPortNames = this.cache.availableSerialPortNames.ToArray();
+            foreach (var name in cachedPortNames)
+            {
+                if (portNames.Contains(name) == false)
+                {
+                    this.cache.availableSerialPortNames.Remove(name);
+                    if (this.portsForm != null)
+                    {
+                        this.portsForm.removePortName(name);
+                    }
+                }
+            }
+        }
+
         private void clearSerialPortNames()
         {
             this.serialPort1.PortName = "None";
             this.serialPort2.PortName = "None";
-        }
-
-        private void portScan()
-        {
-            while (true)
-            {
-                cache.availableSerialPortNames.Clear();
-                cache.availableSerialPortNames.AddRange(System.IO.Ports.SerialPort.GetPortNames());
-                Thread.Sleep(1200);
-            }
         }
 
         private void toolStripButtonSettings_Click(object sender, EventArgs e)
@@ -75,7 +111,15 @@ namespace USART_Monitor
         private void toolStripButtonPorts_Click(object sender, EventArgs e)
         {
             MainForm mainForm = this;
-            PortsForm portsForm = new PortsForm(ref this.cache, ref mainForm);
+            if (this.portsForm == null)
+            {
+                portsForm = new PortsForm(ref this.cache, ref mainForm);
+                foreach (string name in this.cache.availableSerialPortNames)
+                {
+                    portsForm.addPortName(name);
+                }
+            }
+
             portsForm.StartPosition = FormStartPosition.Manual;
             portsForm.Location = new Point(this.Location.X + this.Width / 2 - portsForm.Width / 2, this.Location.Y + 30);
             if (portsForm.ShowDialog() == DialogResult.Yes)
@@ -103,12 +147,12 @@ namespace USART_Monitor
 
         private void serialPort1_pinChanged(object sender, System.IO.Ports.SerialPinChangedEventArgs e)
         {
-            Console.WriteLine("pin changed.");
+            Console.WriteLine("serialPort1_pinChanged");
         }
 
         private void serialPort1_errorReceived(object sender, System.IO.Ports.SerialErrorReceivedEventArgs e)
         {
-            Console.WriteLine("error.");
+            Console.WriteLine("serialPort1_errorReceived");
         }
 
         private void saveAndPrintDataThreadSafe()
@@ -126,7 +170,6 @@ namespace USART_Monitor
                 {
                     Thread.Sleep(100);
                 }
-
             }
         }
 
@@ -168,16 +211,16 @@ namespace USART_Monitor
                     try
                     {
                         str = serialPort.ReadLine();
-                    } catch (TimeoutException e)
+                    } catch (TimeoutException)
                     {
                         try
                         {
                             str = serialPort.ReadExisting();
-                        } catch (Exception e2)
+                        } catch
                         {
                             return;
                         }
-                    } catch (Exception e)
+                    } catch
                     {
                         return;
                     }
@@ -243,6 +286,12 @@ namespace USART_Monitor
                 this.cache.bConnected = true;
             }
         }
+
+        // TODO: how to use SerialPort.DsrHolding
+        // TODO: reconnect target ports when replug ports
+        // TODO: show port's device name
+        // TODO: add a button to clear log window
+        // TODO: show target ports connection status
 
         private void toolStripButtonDisconnect_Click(object sender, EventArgs e)
         {
@@ -370,6 +419,7 @@ namespace USART_Monitor
                     Console.WriteLine(e.Message);
                     return false;
                 }
+                bytes = BitConverter.GetBytes(longValue);
                 if (BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(bytes);
@@ -436,6 +486,16 @@ namespace USART_Monitor
             {
                 this.serialPort2.BaudRate = baudRate;
             }
+        }
+
+        private void serialPort2_ErrorReceived(object sender, System.IO.Ports.SerialErrorReceivedEventArgs e)
+        {
+            Console.WriteLine("serialPort2_ErrorReceived:" + e.ToString());
+        }
+
+        private void serialPort2_PinChanged(object sender, System.IO.Ports.SerialPinChangedEventArgs e)
+        {
+            Console.WriteLine("serialPort2_PinChanged:" + e.ToString());
         }
     }
 }
