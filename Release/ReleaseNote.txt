@@ -2,3 +2,9 @@
 27/06/2023
 Be able to read serial input and print to file and screen.
 No test. May have many bugs.
+
+0.8.0
+7/05/2023
+1. Supports changing baud rate.
+2. Added "sending data to serial ports" function.
+Little test.
