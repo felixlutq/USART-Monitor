@@ -36,10 +36,14 @@ namespace USART_Monitor
             this.toolStripButtonPorts = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonConnect = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDisconnect = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonClear = new System.Windows.Forms.ToolStripButton();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.textBoxOutput = new System.Windows.Forms.TextBox();
             this.serialPort2 = new System.IO.Ports.SerialPort(this.components);
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabelPort1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabelPort2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabelTime = new System.Windows.Forms.ToolStripStatusLabel();
             this.textBoxInput = new System.Windows.Forms.TextBox();
             this.comboBoxDataType = new System.Windows.Forms.ComboBox();
             this.comboBoxBaudrate = new System.Windows.Forms.ComboBox();
@@ -49,6 +53,7 @@ namespace USART_Monitor
             this.labelSendTo = new System.Windows.Forms.Label();
             this.comboBoxSendTo = new System.Windows.Forms.ComboBox();
             this.toolStrip1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -57,7 +62,8 @@ namespace USART_Monitor
             this.toolStripButtonSettings,
             this.toolStripButtonPorts,
             this.toolStripButtonConnect,
-            this.toolStripButtonDisconnect});
+            this.toolStripButtonDisconnect,
+            this.toolStripButtonClear});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(784, 25);
@@ -104,24 +110,34 @@ namespace USART_Monitor
             this.toolStripButtonDisconnect.Text = "Disconnect";
             this.toolStripButtonDisconnect.Click += new System.EventHandler(this.toolStripButtonDisconnect_Click);
             // 
+            // toolStripButtonClear
+            // 
+            this.toolStripButtonClear.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonClear.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonClear.Image")));
+            this.toolStripButtonClear.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonClear.Name = "toolStripButtonClear";
+            this.toolStripButtonClear.Size = new System.Drawing.Size(38, 22);
+            this.toolStripButtonClear.Text = "Clear";
+            this.toolStripButtonClear.Click += new System.EventHandler(this.toolStripButtonClear_Click);
+            // 
             // serialPort1
             // 
             this.serialPort1.ErrorReceived += new System.IO.Ports.SerialErrorReceivedEventHandler(this.serialPort1_errorReceived);
             this.serialPort1.PinChanged += new System.IO.Ports.SerialPinChangedEventHandler(this.serialPort1_pinChanged);
             this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_dataReceived);
             // 
-            // textBox1
+            // textBoxOutput
             // 
-            this.textBox1.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.textBox1.Location = new System.Drawing.Point(0, 25);
-            this.textBox1.MaxLength = 0;
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(784, 453);
-            this.textBox1.TabIndex = 1;
-            this.textBox1.TextChanged += new System.EventHandler(this.autoScrollDown);
+            this.textBoxOutput.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.textBoxOutput.Location = new System.Drawing.Point(0, 25);
+            this.textBoxOutput.MaxLength = 0;
+            this.textBoxOutput.Multiline = true;
+            this.textBoxOutput.Name = "textBoxOutput";
+            this.textBoxOutput.ReadOnly = true;
+            this.textBoxOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxOutput.Size = new System.Drawing.Size(784, 453);
+            this.textBoxOutput.TabIndex = 1;
+            this.textBoxOutput.TextChanged += new System.EventHandler(this.autoScrollDown);
             // 
             // serialPort2
             // 
@@ -131,11 +147,30 @@ namespace USART_Monitor
             // 
             // statusStrip1
             // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabelPort1,
+            this.toolStripStatusLabelPort2,
+            this.toolStripStatusLabelTime});
             this.statusStrip1.Location = new System.Drawing.Point(0, 539);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(784, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabelPort1
+            // 
+            this.toolStripStatusLabelPort1.Name = "toolStripStatusLabelPort1";
+            this.toolStripStatusLabelPort1.Size = new System.Drawing.Size(0, 17);
+            // 
+            // toolStripStatusLabelPort2
+            // 
+            this.toolStripStatusLabelPort2.Name = "toolStripStatusLabelPort2";
+            this.toolStripStatusLabelPort2.Size = new System.Drawing.Size(0, 17);
+            // 
+            // toolStripStatusLabelTime
+            // 
+            this.toolStripStatusLabelTime.Name = "toolStripStatusLabelTime";
+            this.toolStripStatusLabelTime.Size = new System.Drawing.Size(0, 17);
             // 
             // textBoxInput
             // 
@@ -251,13 +286,16 @@ namespace USART_Monitor
             this.Controls.Add(this.comboBoxDataType);
             this.Controls.Add(this.textBoxInput);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.textBoxOutput);
             this.Controls.Add(this.toolStrip1);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "USART Monitor";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -269,7 +307,7 @@ namespace USART_Monitor
         private System.Windows.Forms.ToolStripButton toolStripButtonSettings;
         private System.Windows.Forms.ToolStripButton toolStripButtonPorts;
         private System.IO.Ports.SerialPort serialPort1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBoxOutput;
         private System.Windows.Forms.ToolStripButton toolStripButtonConnect;
         private System.Windows.Forms.ToolStripButton toolStripButtonDisconnect;
         private System.IO.Ports.SerialPort serialPort2;
@@ -282,6 +320,10 @@ namespace USART_Monitor
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label labelSendTo;
         private System.Windows.Forms.ComboBox comboBoxSendTo;
+        private System.Windows.Forms.ToolStripButton toolStripButtonClear;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelPort1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelPort2;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelTime;
     }
 }
 

@@ -19,8 +19,14 @@ namespace USART_Monitor
     {
         private Cache cache;
         private ConcurrentBag<String> concurrentBag;
-        private delegate void SafeCallDelegate(string text);
+        private delegate void writeTextSafeDelegate(string text);
+        private delegate void updatePortsStatusOnStatusBarDelegate();
         private PortsForm portsForm;
+        private Thread timerThread;
+        private Thread printThread;
+        private volatile bool timerThreadContinueRunning;
+        private volatile bool printThreadContinueRunning;
+        private volatile bool bHasWorkToDo;
 
         public MainForm()
         {
@@ -29,6 +35,12 @@ namespace USART_Monitor
             cache = new Cache();
             cache.availableSerialPortNames.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             concurrentBag = new ConcurrentBag<string>();
+
+            timerThread = null;
+            printThread = null;
+            timerThreadContinueRunning = false;
+            printThreadContinueRunning = false;
+            bHasWorkToDo = false;
 
             WqlEventQuery insertQuery = new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 2");
             ManagementEventWatcher insertWatcher = new ManagementEventWatcher(insertQuery);
@@ -39,10 +51,6 @@ namespace USART_Monitor
             ManagementEventWatcher removeWatcher = new ManagementEventWatcher(removeQuery);
             removeWatcher.EventArrived += new EventArrivedEventHandler(OnDeviceRemoved);
             removeWatcher.Start();
-
-            Thread thread2 = new Thread(new ThreadStart(this.saveAndPrintDataThreadSafe));
-            thread2.IsBackground = true;
-            thread2.Start();
         }
 
         private void initialiseComponents()
@@ -54,11 +62,45 @@ namespace USART_Monitor
             this.buttonSend.Enabled = false;
             comboBoxBaudrate.SelectedItem = "9600";
             comboBoxDataType.SelectedItem = "text";
+            toolStripStatusLabelTime.Alignment = ToolStripItemAlignment.Right;
+        }
+
+        private void updateTotalLoggingTime() {
+            while(timerThreadContinueRunning)
+            {
+                if (bHasWorkToDo)
+                {
+                    TimeSpan timeSpan = DateTime.Now.Subtract(this.cache.connectionStartTimeFrom);
+                    int days = timeSpan.Days;
+                    if (0 == days)
+                    {
+                        this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"hh\:mm\:ss");
+                    }
+                    else
+                    {
+                        this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"dd\.hh\:mm\:ss");
+                    }
+
+                    try
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    Thread.Yield();
+                }
+            }
         }
 
         private void OnDeviceInserted(object sender, EventArrivedEventArgs e)
         {
             // TODO: how to get device info from the event
+            // TODO: 5 events are tiggered, how to just trigger the last one?
             String []portNames = System.IO.Ports.SerialPort.GetPortNames();
             foreach(var name in portNames)
             {
@@ -68,6 +110,16 @@ namespace USART_Monitor
                     if (this.portsForm != null)
                     {
                         this.portsForm.addPortName(name);
+                    }
+                    if (this.serialPort1.PortName.Equals(name))
+                    {
+                        this.serialPort1.Open();
+                        updatePortsStatusOnStatusBar();
+                    }
+                    else if (this.serialPort2.PortName.Equals(name))
+                    {
+                        this.serialPort2.Open();
+                        updatePortsStatusOnStatusBar();
                     }
                 }
             }
@@ -85,6 +137,7 @@ namespace USART_Monitor
                     if (this.portsForm != null)
                     {
                         this.portsForm.removePortName(name);
+                        updatePortsStatusOnStatusBar();
                     }
                 }
             }
@@ -157,18 +210,22 @@ namespace USART_Monitor
 
         private void saveAndPrintDataThreadSafe()
         {
-            while (true)
+            while (printThreadContinueRunning)
             {
-                String text;
-                if (concurrentBag.TryTake(out text))
+                if (bHasWorkToDo)
                 {
-                    text += "\r\n"; // TODO: when baudrate not match and receives strange characters, \r\n not always work.
-                    writeTextSafe(text);
-                    appendTextToFile(this.cache.logFileName, text);
+                    String text;
+                    while (concurrentBag.TryTake(out text))
+                    {
+                        text += "\r\n"; // TODO: when baudrate not match and receives strange characters, \r\n not always work.
+                        writeTextSafe(text);
+                        appendTextToFile(this.cache.logFileName, text);
+                    }
+                    Thread.Sleep(100);
                 }
                 else
                 {
-                    Thread.Sleep(100);
+                    Thread.Yield();
                 }
             }
         }
@@ -246,14 +303,14 @@ namespace USART_Monitor
 
         private void writeTextSafe(string text)
         {
-            if (textBox1.InvokeRequired)
+            if (textBoxOutput.InvokeRequired)
             {
-                var d = new SafeCallDelegate(writeTextSafe);
-                textBox1.Invoke(d, new object[] { text });
+                var d = new writeTextSafeDelegate(writeTextSafe);
+                textBoxOutput.Invoke(d, new object[] { text });
             }
             else
             {
-                textBox1.Text = textBox1.Text + text;
+                textBoxOutput.Text += text;
             }
         }
 
@@ -285,6 +342,64 @@ namespace USART_Monitor
                 this.buttonSend.Enabled = true;
                 this.cache.bConnected = true;
             }
+            updatePortsStatusOnStatusBar();
+            this.cache.connectionStartTimeFrom = DateTime.Now;
+            toolStripStatusLabelTime.Text = "00:00:00";
+
+            bHasWorkToDo = true;
+            if (null == printThread)
+            {
+                printThread = new Thread(new ThreadStart(this.saveAndPrintDataThreadSafe));
+                printThread.IsBackground = true;
+                printThreadContinueRunning = true;
+                printThread.Start();
+            }
+
+            if (null == timerThread)
+            {
+                timerThread = new Thread(new ThreadStart(this.updateTotalLoggingTime));
+                timerThread.IsBackground = true;
+                timerThreadContinueRunning = true;
+                timerThread.Start();
+            }
+        }
+
+        private void updatePortsStatusOnStatusBar()
+        {
+            if (this.statusStrip1.InvokeRequired)
+            {
+                var d = new updatePortsStatusOnStatusBarDelegate(updatePortsStatusOnStatusBar);
+                this.statusStrip1.Invoke(d, new object[] { });
+            } else
+            {
+                if (true == toolStripButtonConnect.Enabled)
+                {
+                    toolStripStatusLabelPort1.Text = "";
+                    toolStripStatusLabelPort2.Text = "";
+                    return;
+                }
+                ToolStripStatusLabel[] labels = { toolStripStatusLabelPort1, toolStripStatusLabelPort2 };
+                System.IO.Ports.SerialPort[] ports = { this.serialPort1, this.serialPort2 };
+                for (int i = 0; i < labels.Length; ++i)
+                {
+                    if (this.cache.selectedPortNames.Contains(ports[i].PortName))
+                    {
+                        if (ports[i].IsOpen)
+                        {
+                            labels[i].Text = ports[i].PortName;
+                            labels[i].ForeColor = Color.Green;
+                        }
+                        else
+                        {
+                            labels[i].ForeColor = Color.Gray;
+                        }
+                    }
+                    else
+                    {
+                        labels[i].Text = "";
+                    }
+                }
+            }
         }
 
         // TODO: how to use SerialPort.DsrHolding
@@ -309,12 +424,15 @@ namespace USART_Monitor
             this.toolStripButtonDisconnect.Enabled = false;
             this.buttonSend.Enabled = false;
             this.cache.bConnected = false;
+            updatePortsStatusOnStatusBar();
+            bHasWorkToDo = false;
+            timerThread.Interrupt();
         }
 
         private void autoScrollDown(object sender, EventArgs e)
         {
-            this.textBox1.SelectionStart = textBox1.TextLength;
-            this.textBox1.ScrollToCaret();
+            this.textBoxOutput.SelectionStart = textBoxOutput.TextLength;
+            this.textBoxOutput.ScrollToCaret();
         }
 
         private bool sendInputToSerialPort(System.IO.Ports.SerialPort port)
@@ -496,6 +614,33 @@ namespace USART_Monitor
         private void serialPort2_PinChanged(object sender, System.IO.Ports.SerialPinChangedEventArgs e)
         {
             Console.WriteLine("serialPort2_PinChanged:" + e.ToString());
+        }
+
+        private void toolStripButtonClear_Click(object sender, EventArgs e)
+        {
+            this.textBoxOutput.Text = "";
+            File.WriteAllText(this.cache.logFileName, string.Empty);
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.toolStripButtonDisconnect.Enabled)
+            {
+                this.toolStripButtonDisconnect_Click(sender, e);
+            }
+
+            this.printThreadContinueRunning = false;
+            this.timerThreadContinueRunning = false;
+            this.bHasWorkToDo = false;
+            if (null != this.printThread)
+            {
+                this.printThread.Join();
+            }
+            if (null != timerThread)
+            {
+                timerThread.Interrupt();
+                this.timerThread.Join();
+            }
         }
     }
 }

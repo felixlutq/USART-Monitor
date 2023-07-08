@@ -12,6 +12,7 @@ namespace USART_Monitor
         public List<String> availableSerialPortNames;
         public List<String> selectedPortNames;
         public bool bConnected;
+        public DateTime connectionStartTimeFrom;
 
         // settings
         public String dateTimeFormat;
@@ -26,6 +27,7 @@ namespace USART_Monitor
             this.bConnected = false;
             this.selectedPortNames = new List<string>(maxSuportPortsCount);
             this.availableSerialPortNames = new List<string>();
+            connectionStartTimeFrom = DateTime.Now;
 
             dateTimeFormat = "MM/dd/yyyy hh:mm:ss.fff tt";
             logFileName = "D:/USART-log.txt";
