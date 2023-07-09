@@ -54,6 +54,7 @@ namespace USART_Monitor
             this.comboBoxSendTo = new System.Windows.Forms.ComboBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -228,7 +229,6 @@ namespace USART_Monitor
             this.comboBoxBaudrate.Name = "comboBoxBaudrate";
             this.comboBoxBaudrate.Size = new System.Drawing.Size(78, 21);
             this.comboBoxBaudrate.TabIndex = 5;
-            this.comboBoxBaudrate.SelectedIndexChanged += new System.EventHandler(this.comboBoxBaudrate_SelectedIndexChanged);
             this.comboBoxBaudrate.SelectionChangeCommitted += new System.EventHandler(this.comboBoxBaudrate_SelectionChangeCommitted);
             // 
             // buttonSend
@@ -298,6 +298,11 @@ namespace USART_Monitor
             this.panel2.Size = new System.Drawing.Size(141, 24);
             this.panel2.TabIndex = 13;
             // 
+            // timer1
+            // 
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -353,6 +358,7 @@ namespace USART_Monitor
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelTime;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

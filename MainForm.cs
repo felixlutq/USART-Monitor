@@ -28,9 +28,7 @@ namespace USART_Monitor
         private delegate void writeTextSafeDelegate(string text);
         private delegate void updatePortsStatusOnStatusBarDelegate();
         private PortsForm portsForm;
-        private Thread timerThread;
         private Thread printThread;
-        private volatile bool timerThreadContinueRunning;
         private volatile bool printThreadContinueRunning;
         private volatile bool bHasWorkToDo;
 
@@ -42,9 +40,7 @@ namespace USART_Monitor
             cache.availableSerialPortNames.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             concurrentBag = new ConcurrentBag<string>();
 
-            timerThread = null;
             printThread = null;
-            timerThreadContinueRunning = false;
             printThreadContinueRunning = false;
             bHasWorkToDo = false;
 
@@ -76,38 +72,6 @@ namespace USART_Monitor
             comboBoxBaudrate.SelectedItem = "9600";
             comboBoxDataType.SelectedItem = "text";
             toolStripStatusLabelTime.Alignment = ToolStripItemAlignment.Right;
-        }
-
-        private void updateTotalLoggingTime() {
-            while(timerThreadContinueRunning)
-            {
-                if (bHasWorkToDo)
-                {
-                    TimeSpan timeSpan = DateTime.Now.Subtract(this.cache.connectionStartTimeFrom);
-                    int days = timeSpan.Days;
-                    if (0 == days)
-                    {
-                        this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"hh\:mm\:ss");
-                    }
-                    else
-                    {
-                        this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"dd\.hh\:mm\:ss");
-                    }
-
-                    try
-                    {
-                        Thread.Sleep(1000);
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    Thread.Yield();
-                }
-            }
         }
 
         private void OnDeviceInserted(object sender, EventArrivedEventArgs e)
@@ -368,13 +332,8 @@ namespace USART_Monitor
                 printThread.Start();
             }
 
-            if (null == timerThread)
-            {
-                timerThread = new Thread(new ThreadStart(this.updateTotalLoggingTime));
-                timerThread.IsBackground = true;
-                timerThreadContinueRunning = true;
-                timerThread.Start();
-            }
+            timer1.Enabled = true;
+            timer1.Start();
         }
 
         private void updatePortsStatusOnStatusBar()
@@ -439,7 +398,7 @@ namespace USART_Monitor
             this.cache.bConnected = false;
             updatePortsStatusOnStatusBar();
             bHasWorkToDo = false;
-            timerThread.Interrupt();
+            this.timer1.Stop();
         }
 
         private void autoScrollDown(object sender, EventArgs e)
@@ -642,17 +601,12 @@ namespace USART_Monitor
                 this.toolStripButtonDisconnect_Click(sender, e);
             }
 
+            timer1.Stop();
             this.printThreadContinueRunning = false;
-            this.timerThreadContinueRunning = false;
             this.bHasWorkToDo = false;
             if (null != this.printThread)
             {
                 this.printThread.Join();
-            }
-            if (null != timerThread)
-            {
-                timerThread.Interrupt();
-                this.timerThread.Join();
             }
         }
 
@@ -664,6 +618,20 @@ namespace USART_Monitor
             textBoxInput.Size = new Size(this.textBoxInputInitializeSize.Width + deltaSize.Width, this.textBoxInputInitializeSize.Height);
             panel1.Location = panel1IntializedLocation + deltaSize;
             panel2.Location = new Point(panel2IntializedLocation.X + deltaSize.Width, panel2IntializedLocation.Y);
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            TimeSpan timeSpan = DateTime.Now.Subtract(this.cache.connectionStartTimeFrom);
+            int days = timeSpan.Days;
+            if (0 == days)
+            {
+                this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"hh\:mm\:ss");
+            }
+            else
+            {
+                this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"dd\.hh\:mm\:ss");
+            }
         }
     }
 }
