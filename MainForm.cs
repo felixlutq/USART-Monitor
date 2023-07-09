@@ -17,6 +17,12 @@ namespace USART_Monitor
 {
     public partial class MainForm : Form
     {
+        private Size mainFormInitializeSize;
+        private Size textBoxOutputInitializeSize;
+        private Size textBoxInputInitializeSize;
+        private Point textBoxInputInitializeLocation;
+        private Point panel1IntializedLocation;
+        private Point panel2IntializedLocation;
         private Cache cache;
         private ConcurrentBag<String> concurrentBag;
         private delegate void writeTextSafeDelegate(string text);
@@ -55,6 +61,13 @@ namespace USART_Monitor
 
         private void initialiseComponents()
         {
+            mainFormInitializeSize = this.Size;
+            textBoxOutputInitializeSize = this.textBoxOutput.Size;
+            textBoxInputInitializeSize = this.textBoxInput.Size;
+            textBoxInputInitializeLocation = this.textBoxInput.Location;
+            panel1IntializedLocation = this.panel1.Location;
+            panel2IntializedLocation = this.panel2.Location;
+
             clearSerialPortNames();
             this.portsForm = null;
             this.toolStripButtonConnect.Enabled = false;
@@ -641,6 +654,16 @@ namespace USART_Monitor
                 timerThread.Interrupt();
                 this.timerThread.Join();
             }
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            Size deltaSize = this.Size - this.mainFormInitializeSize;
+            textBoxOutput.Size = textBoxOutputInitializeSize + deltaSize;
+            textBoxInput.Location = new Point(textBoxInput.Location.X, this.textBoxInputInitializeLocation.Y + deltaSize.Height);
+            textBoxInput.Size = new Size(this.textBoxInputInitializeSize.Width + deltaSize.Width, this.textBoxInputInitializeSize.Height);
+            panel1.Location = panel1IntializedLocation + deltaSize;
+            panel2.Location = new Point(panel2IntializedLocation.X + deltaSize.Width, panel2IntializedLocation.Y);
         }
     }
 }

@@ -52,8 +52,12 @@ namespace USART_Monitor
             this.label2 = new System.Windows.Forms.Label();
             this.labelSendTo = new System.Windows.Forms.Label();
             this.comboBoxSendTo = new System.Windows.Forms.ComboBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -193,7 +197,7 @@ namespace USART_Monitor
             "long(64 bits)",
             "float(32 bits)",
             "double(64 bits)"});
-            this.comboBoxDataType.Location = new System.Drawing.Point(694, 513);
+            this.comboBoxDataType.Location = new System.Drawing.Point(111, 28);
             this.comboBoxDataType.Name = "comboBoxDataType";
             this.comboBoxDataType.Size = new System.Drawing.Size(78, 21);
             this.comboBoxDataType.TabIndex = 4;
@@ -220,15 +224,16 @@ namespace USART_Monitor
             "57600",
             "76800",
             "115200"});
-            this.comboBoxBaudrate.Location = new System.Drawing.Point(597, 3);
+            this.comboBoxBaudrate.Location = new System.Drawing.Point(60, 3);
             this.comboBoxBaudrate.Name = "comboBoxBaudrate";
             this.comboBoxBaudrate.Size = new System.Drawing.Size(78, 21);
             this.comboBoxBaudrate.TabIndex = 5;
+            this.comboBoxBaudrate.SelectedIndexChanged += new System.EventHandler(this.comboBoxBaudrate_SelectedIndexChanged);
             this.comboBoxBaudrate.SelectionChangeCommitted += new System.EventHandler(this.comboBoxBaudrate_SelectionChangeCommitted);
             // 
             // buttonSend
             // 
-            this.buttonSend.Location = new System.Drawing.Point(584, 488);
+            this.buttonSend.Location = new System.Drawing.Point(1, 3);
             this.buttonSend.Name = "buttonSend";
             this.buttonSend.Size = new System.Drawing.Size(47, 46);
             this.buttonSend.TabIndex = 7;
@@ -239,7 +244,7 @@ namespace USART_Monitor
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(637, 517);
+            this.label1.Location = new System.Drawing.Point(54, 32);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(53, 13);
             this.label1.TabIndex = 8;
@@ -248,7 +253,7 @@ namespace USART_Monitor
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(540, 6);
+            this.label2.Location = new System.Drawing.Point(3, 6);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 13);
             this.label2.TabIndex = 9;
@@ -257,7 +262,7 @@ namespace USART_Monitor
             // labelSendTo
             // 
             this.labelSendTo.AutoSize = true;
-            this.labelSendTo.Location = new System.Drawing.Point(640, 492);
+            this.labelSendTo.Location = new System.Drawing.Point(57, 7);
             this.labelSendTo.Name = "labelSendTo";
             this.labelSendTo.Size = new System.Drawing.Size(44, 13);
             this.labelSendTo.TabIndex = 10;
@@ -267,35 +272,57 @@ namespace USART_Monitor
             // 
             this.comboBoxSendTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxSendTo.FormattingEnabled = true;
-            this.comboBoxSendTo.Location = new System.Drawing.Point(694, 488);
+            this.comboBoxSendTo.Location = new System.Drawing.Point(111, 3);
             this.comboBoxSendTo.Name = "comboBoxSendTo";
             this.comboBoxSendTo.Size = new System.Drawing.Size(78, 21);
             this.comboBoxSendTo.TabIndex = 11;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.labelSendTo);
+            this.panel1.Controls.Add(this.comboBoxSendTo);
+            this.panel1.Controls.Add(this.comboBoxDataType);
+            this.panel1.Controls.Add(this.buttonSend);
+            this.panel1.Controls.Add(this.label1);
+            this.panel1.Location = new System.Drawing.Point(583, 484);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(188, 52);
+            this.panel1.TabIndex = 12;
+            // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.label2);
+            this.panel2.Controls.Add(this.comboBoxBaudrate);
+            this.panel2.Location = new System.Drawing.Point(628, 1);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(141, 24);
+            this.panel2.TabIndex = 13;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
-            this.Controls.Add(this.comboBoxSendTo);
-            this.Controls.Add(this.labelSendTo);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.buttonSend);
-            this.Controls.Add(this.comboBoxBaudrate);
-            this.Controls.Add(this.comboBoxDataType);
+            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.textBoxInput);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.textBoxOutput);
             this.Controls.Add(this.toolStrip1);
+            this.Controls.Add(this.textBoxOutput);
+            this.MinimumSize = new System.Drawing.Size(450, 200);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "USART Monitor";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -324,6 +351,8 @@ namespace USART_Monitor
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelPort1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelPort2;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelTime;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel2;
     }
 }
 
