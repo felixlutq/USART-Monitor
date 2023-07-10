@@ -698,5 +698,11 @@ namespace USART_Monitor
                 this.toolStripStatusLabelTime.Text = timeSpan.ToString(@"dd\.hh\:mm\:ss");
             }
         }
+
+        private void toolStripButtonAbout_Click(object sender, EventArgs e)
+        {
+            AboutDialog aboutDialog = new AboutDialog();
+            aboutDialog.ShowDialog();
+        }
     }
 }
