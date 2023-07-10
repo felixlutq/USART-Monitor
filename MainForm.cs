@@ -78,6 +78,7 @@ namespace USART_Monitor
         {
             // TODO: how to get device info from the event
             // TODO: 5 events are tiggered, how to just trigger the last one?
+            //getAllSerialPortsInfo();
             String []portNames = System.IO.Ports.SerialPort.GetPortNames();
             foreach(var name in portNames)
             {
@@ -104,6 +105,7 @@ namespace USART_Monitor
 
         private void OnDeviceRemoved(object sender, EventArrivedEventArgs e)
         {
+            //getAllSerialPortsInfo();
             String[] portNames = System.IO.Ports.SerialPort.GetPortNames();
             String[] cachedPortNames = this.cache.availableSerialPortNames.ToArray();
             foreach (var name in cachedPortNames)
@@ -118,6 +120,48 @@ namespace USART_Monitor
                     }
                 }
             }
+        }
+
+        // name=Communications Port (COM1),des=Communications Port
+        // name=USB Serial Port (COM3),des=USB Serial Port
+        private Dictionary<string, string> getAllSerialPortsInfo()
+        {
+            var dict = new Dictionary<string, string>();
+            using (var mos = new ManagementObjectSearcher(@"Select * From Win32_PNPEntity"))
+            {
+                using (ManagementObjectCollection collection = mos.Get())
+                {
+                    foreach (var device in collection)
+                    {
+                        object value = device.GetPropertyValue("Name");
+                        if (null != value)
+                        {
+                            var name = device.GetPropertyValue("Name").ToString();
+                            string comName;
+                            string description;
+                            if (name.StartsWith("Communications Port (COM"))
+                            {
+                                int offset = name.IndexOf('(') + 1;
+                                comName = name.Substring(offset, name.IndexOf(')') - offset);
+                                description = "";
+                            }
+                            else if (name.StartsWith("USB Serial Port (COM"))
+                            {
+                                int offset = name.IndexOf('(') + 1;
+                                comName = comName = name.Substring(offset, name.IndexOf(')') - offset);
+                                description = device.GetPropertyValue("Description").ToString();
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                            dict.Add(comName, description);
+                            Console.WriteLine("name=" + comName + ",des=" + description);
+                        }
+                    }
+                }
+            }
+            return dict;
         }
 
         private void clearSerialPortNames()
@@ -194,7 +238,6 @@ namespace USART_Monitor
                     String text;
                     while (concurrentBag.TryTake(out text))
                     {
-                        text += "\r\n"; // TODO: when baudrate not match and receives strange characters, \r\n not always work.
                         writeTextSafe(text);
                         appendTextToFile(this.cache.logFileName, text);
                     }
@@ -209,10 +252,24 @@ namespace USART_Monitor
 
         private void appendTextToFile(String fileName, String text)
         {
-            FileStream fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Write);
-            byte[] bytes = new UTF8Encoding(true).GetBytes(text);
-            fs.Write(bytes, 0, bytes.Length);
-            fs.Close();
+            FileStream fs = null;
+            try
+            {
+                fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Write);
+                byte[] bytes = new UTF8Encoding(true).GetBytes(text + "\r\n");
+                fs.Write(bytes, 0, bytes.Length);
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+            finally
+            {
+                if (null != fs)
+                {
+                    fs.Close();
+                }
+            }
         }
 
         private void processDataThreadSafe(System.IO.Ports.SerialPort serialPort)
@@ -287,7 +344,15 @@ namespace USART_Monitor
             }
             else
             {
-                textBoxOutput.Text += text;
+                if (textBoxOutput.Text.Length == 0)
+                {
+                    textBoxOutput.AppendText(text);
+                }
+                else
+                {
+                    textBoxOutput.AppendText("\r\n" + text);
+                }
+                
             }
         }
 
